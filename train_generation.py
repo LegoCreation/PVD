@@ -376,16 +376,16 @@ class GaussianDiffusion:
 
 class PVCNN2(PVCNN2Base):
     sa_blocks = [
-        ((32, 2, 32), (1024, 0.1, 32, (32, 64))),
-        ((64, 3, 16), (256, 0.2, 32, (64, 128))),
-        ((128, 3, 8), (64, 0.4, 32, (128, 256))),
-        (None, (16, 0.8, 32, (256, 256, 512))),
+        ((16, 2, 32), (1024, 0.1, 32, (16, 32))),
+        ((32, 3, 16), (256, 0.2, 32, (32, 64))),
+        ((64, 3, 16), (64, 0.4, 32, (64, 128))),
+        (None, (16, 0.8, 32, (128, 128, 256))),
     ]
     fp_blocks = [
-        ((256, 256), (256, 3, 8)),
-        ((256, 256), (256, 3, 8)),
-        ((256, 128), (128, 2, 16)),
-        ((128, 128, 64), (64, 2, 32)),
+        ((128, 128), (128, 3, 16)),
+        ((128, 128), (128, 3, 16)),
+        ((128, 64), (64, 2, 16)),
+        ((64, 64, 32), (32, 2, 32)),
     ]
 
     def __init__(self, num_classes, embed_dim, use_att,dropout, extra_feature_channels=3, width_multiplier=1,
@@ -402,8 +402,10 @@ class Model(nn.Module):
         super(Model, self).__init__()
         self.diffusion = GaussianDiffusion(betas, loss_type, model_mean_type, model_var_type)
 
+        voxel_resolution_multiplier = getattr(args, 'voxel_resolution_multiplier', 1)
         self.model = PVCNN2(num_classes=args.nc, embed_dim=args.embed_dim, use_att=args.attention,
-                            dropout=args.dropout, extra_feature_channels=0)
+                            dropout=args.dropout, extra_feature_channels=0,
+                            voxel_resolution_multiplier=voxel_resolution_multiplier)
 
     def prior_kl(self, x0):
         return self.diffusion._prior_bpd(x0)
